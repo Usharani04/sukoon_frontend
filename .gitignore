@@ -1,0 +1,11 @@
+﻿node_modules/
+.next/
+.env.local
+cache/
+server/
+static/
+
+app-build-manifest.json
+build-manifest.json
+react-loadable-manifest.json
+trace

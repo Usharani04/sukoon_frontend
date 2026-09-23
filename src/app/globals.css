@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-primary: #3F7268;
+    --brand-dark: #212121;
+    --brand-evergreen: #293F3B;
+    --brand-healing: #628E7A;
+    --brand-sage: #9CAF88;
+    --brand-horizon: #A4C5D8;
+    --brand-olive: #A3A07D;
+    --brand-oat: #D4C7B6;
+    --brand-apricot: #DBA882;
+    --brand-mist: #EFEFEF;
+    --brand-stone: #B5B5B5;
+    --brand-charcoal: #111111;
+  }
+
+  body {
+    color: var(--brand-dark);
+    background-color: #ffffff;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--brand-evergreen);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+.sukoon-gradient-hero {
+  background: linear-gradient(135deg, #293F3B 0%, #3F7268 60%, #628E7A 100%);
+}
+
+.sukoon-gradient-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F2F7F6 100%);
+}
+
+.sukoon-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
