@@ -117,7 +117,7 @@
 import { globalSettings, homePageSections, locationsList, doctorsList, servicesList, disordersList, faqsList, testimonialsList } from "./mock-data";
 import { GlobalSettings, Location, Doctor, Service, Disorder, DynamicSection } from "@/types/content";
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || "http://localhost:1337";
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || "https://sukoon-irrz.onrender.com";
 
 async function strapiFetch(path: string) {
   const res = await fetch(`${STRAPI_URL}${path}`, { next: { revalidate: 60 } });
