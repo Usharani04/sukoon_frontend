@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { figtree } from "@/lib/fonts";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { fetchGlobalSettings } from "@/lib/strapi";
-
-const figtree = Figtree({
-  subsets: ["latin"],
-  variable: "--font-figtree",
-  display: "swap",
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
 
 export const metadata: Metadata = {
   title: "Chain of Mental Health Hospitals & Rehab in India | Sukoon",

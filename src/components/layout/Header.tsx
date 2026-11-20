@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ settings }) => {
                     <span className="w-1.5 h-1.5 rounded-full bg-[#13443e]" />
                     Psychologists
                   </Link>
-                  <Link href="/doctors?role=therapist" className="block font-semibold text-gray-800 px-2 py-1.5 hover:text-[#13443e] flex items-center gap-1">
+                  <Link href="/therapists" className="block font-semibold text-gray-800 px-2 py-1.5 hover:text-[#13443e] flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#13443e]" />
                     Therapists
                   </Link>

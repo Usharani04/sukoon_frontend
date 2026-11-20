@@ -3,19 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Cormorant_Garamond, Figtree } from "next/font/google";
 import { Doctor } from "@/types/content";
-
-const serif = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-const sans = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
+import { cormorant as serif, figtree as sans } from "@/lib/fonts";
 
 const C = {
   bg: "#F6F1E7",

@@ -1,365 +1,188 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Cormorant_Garamond, Inter } from "next/font/google";
-import { CalendarDays, Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, Phone, Smartphone } from "lucide-react";
 import { SukoonLogo } from "../ui/Logo";
-import { GlobalSettings } from "@/types/content";
+import type { FooterColumn, GlobalSettings, NavLink, SocialLink } from "@/types/content";
 
-const serif = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  display: "swap",
-});
-const sans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
+/**
+ * Site footer, matching sukoon.sbprism.com:
+ *   [logo + description + social icons + phones/email]  [3 link columns]
+ *   ------------------------------------------------------------------
+ *   [legal name, CIN, address]                          [copyright]
+ *
+ * All content comes from the Strapi "Global" single type:
+ *   footer_description, social_links, primary_phone, secondary_phone, admissions_email,
+ *   footer_columns (heading + links), company_legal_name, cin_number, registered_address, copyright_text
+ */
 
-const C = {
-  bg: "#1D4037",
-  gold: "#D9A441",
-  cream: "#FDF8EF",
-  green: "#1D4037",
-  fieldBorder: "#E7E1D3",
-  label: "#22332D",
-  muted: "#5D6B64",
+type FooterSettings = GlobalSettings & { footer_description?: string | null };
+
+const BRAND_ICONS: Record<SocialLink["platform"], { viewBox: string; d: string }> = {
+  facebook: { viewBox: "0 0 320 512", d: "M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z" },
+  twitter: { viewBox: "0 0 512 512", d: "M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z" },
+  linkedin: { viewBox: "0 0 448 512", d: "M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8a53.79 53.79 0 0 1 107.58 0c0 29.7-24.1 54.3-53.79 54.3zM447.9 448h-92.68V302.4c0-34.7-.7-79.2-48.29-79.2-48.29 0-55.69 37.7-55.69 76.7V448h-92.78V148.9h89.08v40.8h1.3c12.4-23.5 42.69-48.3 87.88-48.3 94 0 111.28 61.9 111.28 142.3V448z" },
+  instagram: { viewBox: "0 0 448 512", d: "M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" },
+  youtube: { viewBox: "0 0 576 512", d: "M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z" }
 };
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || "http://localhost:1337";
-const CALLBACK_ENDPOINT = STRAPI_URL + "/api/callback-requests";
+const SOCIAL_LABEL: Record<SocialLink["platform"], string> = {facebook: "Facebook", twitter: "X (Twitter)", linkedin: "LinkedIn", instagram: "Instagram", youtube: "YouTube"};
 
-// Every text on this footer comes from the Global single type in Strapi
-type FooterSettings = GlobalSettings & {
-  contact_eyebrow?: string;
-  contact_heading?: string;
-  contact_description?: string;
-  call_label?: string;
-  email_label?: string;
-  form_eyebrow?: string;
-  form_heading?: string;
-  form_name_label?: string;
-  form_name_placeholder?: string;
-  form_phone_label?: string;
-  form_phone_placeholder?: string;
-  form_city_label?: string;
-  form_cities?: any[];
-  form_message_label?: string;
-  form_message_placeholder?: string;
-  form_button_label?: string;
-  form_footnote?: string;
-  form_success_message?: string;
-  form_error_message?: string;
-  footer_description?: string;
-};
-
-interface ContactCardProps {
-  href: string;
-  label?: string;
-  value: string;
-  icon: React.ReactNode;
-}
-
-const ContactCard: React.FC<ContactCardProps> = ({ href, label, value, icon }) => {
+/** Internal links use next/link; external links open in a new tab. */
+function FooterLink({ link, className }: { link: NavLink; className?: string }) {
+  const url = link.url || "#";
+  if (/^https?:\/\//i.test(url)) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className={className}>
+        {link.label}
+      </a>
+    );
+  }
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.07] px-4 py-3.5 transition hover:bg-white/[0.11]"
-    >
-      <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-        style={{ backgroundColor: "rgba(217,164,65,0.22)", color: C.gold }}
-      >
-        {icon}
-      </span>
-      <span>
-        {label ? (
-          <span className="block text-[12px] uppercase tracking-[0.1em] text-white/70">
-            {label}
-          </span>
-        ) : null}
-        <span className="block break-all text-[17px] font-medium">{value}</span>
-      </span>
+    <Link href={url} className={className}>
+      {link.label}
     </Link>
   );
-};
+}
+
+/** Column widths follow the live site: first column widest, last slightly wider than the middle. */
+function columnFlex(index: number, total: number) {
+  if (index === 0) return "md:flex-[1.35_1_0] md:min-w-[240px] md:pr-3";
+  if (index === total - 1 && total > 2) return "md:flex-[1.1_1_0]";
+  return "md:flex-[1_1_0]";
+}
+
+function FooterLinkColumn({ col, index, total }: { col: FooterColumn; index: number; total: number }) {
+  const links = col.links || [];
+  // Long lists (e.g. "Resources & Information") split into two sub-columns, as on the live site.
+  const twoCols = links.length > 6;
+  return (
+    <div className={`w-full ${columnFlex(index, total)}`}>
+      <h3 className="mb-4 border-b border-white pb-4 pt-[0.4rem] text-[16px] font-normal leading-6 text-white xl:text-[18px] xl:leading-7">
+        {col.heading}
+      </h3>
+      <ul className={twoCols ? "grid grid-cols-2 gap-x-[18px]" : ""}>
+        {links.map((link, i) => (
+          <li key={link.id ?? i} className="pb-3 text-[14px] leading-[22px] xl:text-[16px] xl:leading-[26px]">
+            <FooterLink link={link} className="text-white transition-colors duration-300 hover:text-[#d3d3d3]" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ContactRow({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="flex items-center gap-2 pt-[0.8rem] text-[14px] leading-[22px] text-white transition-colors duration-300 hover:text-[#d3d3d3] md:text-[16px] md:leading-6"
+    >
+      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center" aria-hidden="true">
+        {icon}
+      </span>
+      {children}
+    </a>
+  );
+}
 
 interface FooterProps {
   settings: GlobalSettings;
 }
 
-export const Footer: React.FC<FooterProps> = ({ settings: rawSettings }) => {
-  const settings = rawSettings as FooterSettings;
-
-  const cityList: string[] = Array.isArray(settings.form_cities)
-    ? settings.form_cities
-        .map((c: any) => (typeof c === "string" ? c : c?.label || c?.name || ""))
-        .filter((c: string) => c !== "")
-    : [];
-
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [city, setCity] = useState(cityList[0] || "");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (status === "sending") return;
-    setStatus("sending");
-    try {
-      const res = await fetch(CALLBACK_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: { name, phone, city, message } }),
-      });
-      if (!res.ok) throw new Error("Request failed");
-      setStatus("success");
-      setName("");
-      setPhone("");
-      setMessage("");
-    } catch (err) {
-      setStatus("error");
-    }
-  };
-
-  const columns = settings.footer_columns || [];
-  const phoneValue = settings.primary_phone || "";
-  const emailValue = settings.admissions_email || "";
-  const telHref = "tel:" + phoneValue.replace(/\s+/g, "");
-  const mailHref = "mailto:" + emailValue;
-
-  const inputClass =
-    "w-full rounded-lg border bg-white px-4 py-2.5 text-[15px] outline-none transition focus:ring-2 focus:ring-[#1D4037]/25";
-  const labelClass = "mb-1.5 block text-[13px] font-medium";
+export const Footer: React.FC<FooterProps> = ({ settings: raw }) => {
+  const s = raw as FooterSettings;
+  const columns = s.footer_columns || [];
+  const socials = (s.social_links || []).filter((l) => l?.url && BRAND_ICONS[l.platform]);
+  const tel = (v?: string | null) => "tel:" + (v || "").replace(/[^\d+]/g, "");
+  const year = new Date().getFullYear();
 
   return (
-    <footer className={sans.className + " text-white"} style={{ backgroundColor: C.bg }}>
-      {/* ============ GET IN TOUCH + CALLBACK FORM ============ */}
-      <div className="mx-auto max-w-[1200px] px-5 pb-14 pt-12 sm:px-8 lg:pb-16 lg:pt-14">
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
-          {/* Left */}
-          <div>
-            {settings.contact_eyebrow ? (
-              <p
-                className="text-[12px] font-medium uppercase tracking-[0.2em]"
-                style={{ color: C.gold }}
-              >
-                {settings.contact_eyebrow}
-              </p>
-            ) : null}
-
-           {settings.contact_heading ? (
-           <h2
-           className={
-           serif.className +
-           " mt-4 text-[34px] font-normal leading-[1.1] text-white sm:text-[42px] lg:text-[48px]"
-           }
-           >
-           {settings.contact_heading}
-           </h2>
-           ) : null}
-
-            {settings.contact_description ? (
-              <p className="mt-5 max-w-[520px] text-[16px] leading-[1.65] text-white/85">
-                {settings.contact_description}
-              </p>
-            ) : null}
-
-            <div className="mt-8 space-y-4">
-              {phoneValue !== "" ? (
-                <ContactCard
-                  href={telHref}
-                  label={settings.call_label}
-                  value={phoneValue}
-                  icon={<Phone size={18} />}
-                />
-              ) : null}
-
-              {emailValue !== "" ? (
-                <ContactCard
-                  href={mailHref}
-                  label={settings.email_label}
-                  value={emailValue}
-                  icon={<Mail size={18} />}
-                />
-              ) : null}
+    <footer className="bg-[#293F3B] text-white">
+      <div className="mx-auto flex max-w-[1440px] flex-col px-4 py-8 lg:px-20 lg:pb-16 lg:pt-[68px] xl:pb-[42px] xl:pt-[90px]">
+        <div className="flex w-full flex-col gap-10 lg:mb-[3.25rem] lg:flex-row lg:gap-0">
+          {/* ---------- Brand + contact ---------- */}
+          <div className="w-full lg:w-[30%] xl:w-[35%]">
+            {/* Live site: green logo on a white rounded badge (223 × 83) */}
+            <div className="flex justify-center lg:block">
+              <div className="inline-flex rounded-[7px] bg-white px-[17px] py-[13px]">
+                <SukoonLogo variant="dark" height={56} />
+              </div>
             </div>
-          </div>
 
-          {/* Right: callback card */}
-          <div
-            className="rounded-3xl p-6 shadow-[0_24px_50px_-20px_rgba(0,0,0,0.45)] sm:p-8"
-            style={{ backgroundColor: C.cream, color: C.label }}
-          >
-            {settings.form_eyebrow ? (
-              <div
-                className="flex items-center gap-2.5 text-[12px] font-medium uppercase tracking-[0.2em]"
-                style={{ color: C.green }}
-              >
-                <CalendarDays size={18} />
-                <span>{settings.form_eyebrow}</span>
-              </div>
-            ) : null}
-
-            {settings.form_heading ? (
-              <h3
-                className={
-                  serif.className + " mt-2 text-[26px] font-normal leading-tight sm:text-[30px]"
-                }
-                style={{ color: C.green }}
-              >
-                {settings.form_heading}
-              </h3>
-            ) : null}
-
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div>
-                {settings.form_name_label ? (
-                  <label htmlFor="cb-name" className={labelClass}>
-                    {settings.form_name_label}
-                  </label>
-                ) : null}
-                <input
-                  id="cb-name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={settings.form_name_placeholder || ""}
-                  className={inputClass}
-                  style={{ borderColor: C.fieldBorder }}
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  {settings.form_phone_label ? (
-                    <label htmlFor="cb-phone" className={labelClass}>
-                      {settings.form_phone_label}
-                    </label>
-                  ) : null}
-                  <input
-                    id="cb-phone"
-                    required
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={settings.form_phone_placeholder || ""}
-                    className={inputClass}
-                    style={{ borderColor: C.fieldBorder }}
-                  />
-                </div>
-
-                {cityList.length > 0 ? (
-                  <div>
-                    {settings.form_city_label ? (
-                      <label htmlFor="cb-city" className={labelClass}>
-                        {settings.form_city_label}
-                      </label>
-                    ) : null}
-                    <select
-                      id="cb-city"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className={inputClass}
-                      style={{ borderColor: C.fieldBorder }}
-                    >
-                      {cityList.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : null}
-              </div>
-
-              <div>
-                {settings.form_message_label ? (
-                  <label htmlFor="cb-msg" className={labelClass}>
-                    {settings.form_message_label}
-                  </label>
-                ) : null}
-                <textarea
-                  id="cb-msg"
-                  rows={3}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder={settings.form_message_placeholder || ""}
-                  className={inputClass + " resize-none"}
-                  style={{ borderColor: C.fieldBorder }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-                style={{ backgroundColor: C.green }}
-              >
-                <MessageCircle size={17} />
-                {status === "sending" ? "..." : settings.form_button_label || ""}
-              </button>
-
-              {status === "success" && settings.form_success_message ? (
-                <p className="text-center text-[14px]" style={{ color: C.green }}>
-                  {settings.form_success_message}
-                </p>
-              ) : null}
-              {status === "error" && settings.form_error_message ? (
-                <p className="text-center text-[14px] text-red-700">
-                  {settings.form_error_message}
-                </p>
-              ) : null}
-
-              {settings.form_footnote ? (
-                <p className="text-center text-[13px]" style={{ color: C.muted }}>
-                  {settings.form_footnote}
-                </p>
-              ) : null}
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* ============ LINK COLUMNS ============ */}
-      <div className="mx-auto max-w-[1200px] px-5 pb-8 pt-2 sm:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
-          {/* Brand */}
-          <div>
-            <SukoonLogo variant="light" size="md" />
-            {settings.footer_description ? (
-              <p className="mt-4 max-w-[320px] text-[14px] leading-[1.65] text-white/75">
-                {settings.footer_description}
+            {s.footer_description ? (
+              <p className="mb-[18px] mt-[14px] max-w-[310px] whitespace-pre-line text-[13px] leading-[1.65] text-white/90">
+                {s.footer_description}
               </p>
             ) : null}
-          </div>
 
-          {columns.map((col, idx) => (
-            <div key={col.id ?? idx}>
-              <h4 className="text-[15px] font-semibold text-white">{col.heading}</h4>
-              <ul className="mt-4 space-y-2.5">
-                {(col.links || []).map((link, lIdx) => (
-                  <li key={link.id ?? lIdx}>
-                    <Link
-                      href={link.url || "#"}
-                      className="text-[14px] text-white/80 transition hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+            {socials.length > 0 ? (
+              <ul className="flex flex-wrap items-center justify-center gap-5 pb-2 pt-4 lg:justify-start lg:pt-2">
+                {socials.map((l, i) => {
+                  const icon = BRAND_ICONS[l.platform];
+                  return (
+                    <li key={l.id ?? i}>
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer"
+                        aria-label={SOCIAL_LABEL[l.platform]}
+                        className="block opacity-100 transition-opacity hover:opacity-75"
+                      >
+                        <svg viewBox={icon.viewBox} width="22" height="22" fill="currentColor" aria-hidden="true">
+                          <path d={icon.d} />
+                        </svg>
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
+            ) : null}
+
+            <div className="mt-4 flex flex-row flex-wrap justify-around gap-x-6 gap-y-1 lg:flex-col lg:justify-start lg:gap-0">
+              {s.primary_phone ? (
+                <ContactRow href={tel(s.primary_phone)} icon={<Smartphone size={20} />}>
+                  {s.primary_phone}
+                </ContactRow>
+              ) : null}
+              {s.secondary_phone ? (
+                <ContactRow href={tel(s.secondary_phone)} icon={<Phone size={20} />}>
+                  {s.secondary_phone}
+                </ContactRow>
+              ) : null}
+              {s.admissions_email ? (
+                <ContactRow href={"mailto:" + s.admissions_email} icon={<Mail size={20} />}>
+                  {s.admissions_email}
+                </ContactRow>
+              ) : null}
             </div>
-          ))}
+          </div>
+
+          {/* ---------- Link columns ---------- */}
+          {columns.length > 0 ? (
+            <nav aria-label="Footer" className="w-full lg:pl-4 xl:pl-12">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                {columns.map((col, i) => (
+                  <FooterLinkColumn key={col.id ?? i} col={col} index={i} total={columns.length} />
+                ))}
+              </div>
+            </nav>
+          ) : null}
         </div>
 
-        {/* Legal strip */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-5 text-[13px] text-white/50 md:flex-row">
-          <span>{settings.cin_number ? "CIN: " + settings.cin_number : ""}</span>
-          <span>{settings.copyright_text}</span>
+        {/* ---------- Legal strip ---------- */}
+        <div className="mt-10 flex w-full flex-col items-start gap-4 border-t border-white pt-4 text-[16px] leading-6 lg:mt-0 lg:flex-row lg:justify-between">
+          <p className="m-0 max-w-[760px]">
+            {s.company_legal_name ? <strong className="font-semibold">{s.company_legal_name}</strong> : null}
+            {s.cin_number || s.registered_address ? (
+              <>
+                <br />
+                {s.cin_number ? `(CIN: ${s.cin_number})` : ""}
+                {s.cin_number && s.registered_address ? ", " : ""}
+                {s.registered_address || ""}
+              </>
+            ) : null}
+          </p>
+          <p className="m-0 shrink-0">{s.copyright_text || `© ${year} Sukoon Health | All rights reserved`}</p>
         </div>
       </div>
     </footer>
