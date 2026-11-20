@@ -3,19 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { Cormorant_Garamond, Inter } from "next/font/google";
 import { FaqItem } from "@/types/content";
-
-const serif = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-const sans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
+import { cormorant as serif, inter as sans } from "@/lib/fonts";
 
 const C = {
   bg: "#FDFAF3",
